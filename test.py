@@ -1,23 +1,40 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-@app.get("/")
-def root():
-    return {"AAARGH"}
+# Allow Node/frontend to call FastAPI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+last_result = None
 
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    # Server-side file type check
+    if not file.filename.endswith(".txt"):
+        raise HTTPException(status_code=400, detail="Only .txt files are allowed")
 
+    contents = await file.read()
+    text = contents.decode("utf-8")
 
-with open('Count2.txt', 'r') as file:
-    lines = file.readlines()
-    print(lines)
-    integers = [int(line.strip()) for line in lines]
-    for index in range(0,len(integers)):
-        integers[index] += 1
+    try:
+        numbers = [int(line.strip()) for line in text.splitlines() if line.strip()]
+        incremented = [n + 1 for n in numbers]
 
-with open('Count2.txt', 'w') as file:
-    integers = list(map(str, integers))
-    result = "\n".join(integers)
-    file.writelines(result)
-    print(result)
+        global last_result
+        last_result = "\n".join(map(str, incremented))
+
+        return {"original": numbers, "processed": incremented}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing file: {e}")
+
+@app.get("/api/data")
+def get_data():
+    if last_result:
+        return {"message": last_result}
+    return {"message": "No file has been uploaded yet"}

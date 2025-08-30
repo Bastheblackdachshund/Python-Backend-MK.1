@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #333;
+            padding: 5px 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        #downloadBtn {
+            margin-top: 10px;
+            display: none;
+            /* hidden until a file is processed */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Upload a Text File</h1>
+
+    <p>Latest processed result: {{test}}</p>
+
+    <input type="file" id="fileInput" accept=".txt">
+    <button id="uploadBtn">Upload</button>
+    <button id="downloadBtn">Download Updated File</button>
+
+    <div id="output"></div>
+
+    <script>
+        const uploadBtn = document.getElementById("uploadBtn");
+        const fileInput = document.getElementById("fileInput");
+        const output = document.getElementById("output");
+        const downloadBtn = document.getElementById("downloadBtn");
+        let latestProcessed = null;
+        let originalFileName = "";
+
+        uploadBtn.addEventListener("click", async () => {
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file first!");
+                return;
+            }
+
+            if (!file.name.endsWith(".txt")) {
+                alert("Only .txt files are allowed!");
+                return;
+            }
+
+            originalFileName = file.name;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("http://127.0.0.1:8000/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert("Error: " + errorData.detail);
+                    return;
+                }
+
+                const result = await response.json();
+                latestProcessed = result.processed;
+
+                // Display table
+                output.innerHTML = `
+          <table>
+            <tr>
+              <th>Original</th>
+              <th>Processed</th>
+            </tr>
+            ${result.original.map((num, i) => `
+              <tr>
+                <td>${num}</td>
+                <td>${result.processed[i]}</td>
+              </tr>
+            `).join('')}
+          </table>
+        `;
+
+                downloadBtn.style.display = "inline-block";
+
+            } catch (error) {
+                console.error("Upload failed:", error);
+                alert("Upload failed!");
+            }
+        });
+
+        downloadBtn.addEventListener("click", () => {
+            if (!latestProcessed) return;
+
+            const dotIndex = originalFileName.lastIndexOf(".");
+            let downloadName = "";
+            if (dotIndex !== -1) {
+                downloadName = originalFileName.slice(0, dotIndex) + "-processed" + originalFileName.slice(dotIndex);
+            } else {
+                downloadName = originalFileName + "-processed.txt";
+            }
+
+            const blob = new Blob([latestProcessed.join("\n")], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = downloadName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+
+</html>
