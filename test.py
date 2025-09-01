@@ -6,7 +6,7 @@ app = FastAPI()
 # Allow Node/frontend to call FastAPI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -15,7 +15,6 @@ last_result = None
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    # Server-side file type check
     if not file.filename.endswith(".txt"):
         raise HTTPException(status_code=400, detail="Only .txt files are allowed")
 

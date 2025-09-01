@@ -1,6 +1,6 @@
 import express from 'express';
 import { engine } from 'express-handlebars';
-import fetch from 'node-fetch'; // Required if Node <18
+import fetch from 'node-fetch';
 
 const PORT = 3000;
 const app = express();
@@ -11,7 +11,6 @@ app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', './views/');
 
-// Render template with latest FastAPI result
 app.get('/', async (req, res) => {
     let CL = "No data yet";
 
