@@ -1,9 +1,11 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import mariadb
+
 
 app = FastAPI()
 
-# Allow Node/frontend to call FastAPI
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -37,3 +39,22 @@ def get_data():
     if last_result:
         return {"message": last_result}
     return {"message": "No file has been uploaded yet"}
+
+try:
+    conn = mariadb.connect(
+        user="root",
+        password="root",
+        host="localhost",
+        port=3306,
+        database="pythonbase"
+    )
+    print("Bazinga!")
+except mariadb.Error as e:
+    print(f"Error connecting to MariaDB: {e}")
+    exit()
+
+cursor = conn.cursor()
+cursor.execute("INSERT INTO data (num1, num2, num3) VALUES (?, ?, ?)", (5, 25, 30))
+conn.commit()
+cursor.close()
+conn.close()
