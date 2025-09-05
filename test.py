@@ -54,7 +54,8 @@ except mariadb.Error as e:
     exit()
 
 cursor = conn.cursor()
-cursor.execute("INSERT INTO data (num1, num2, num3) VALUES (?, ?, ?)", (5, 25, 30))
+#cursor.execute("INSERT INTO data (num1, num2, num3) VALUES (?, ?, ?)", (5, 25, 30))
+cursor.execute("DELETE FROM data")
 conn.commit()
 cursor.close()
 conn.close()
