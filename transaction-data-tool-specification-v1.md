@@ -226,5 +226,4 @@ i use VScode
   - Legacy systems to integrate with
   - Data import/export requirements
 
-
-![img_1.png](img_1.png)
+![architecture.png](architecture.png)
